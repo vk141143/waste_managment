@@ -174,7 +174,7 @@ const VEHICLE_TYPES = [
   { name: "Container", cap: "8 t", price: "₹4,600", eta: "45 min" },
   { name: "Dumper", cap: "12 t", price: "₹6,400", eta: "60 min" },
 ];
-const STEPS = ["Waste Type", "Quantity & Photos", "Pickup Location", "Choose Vehicle", "Review"];
+const STEPS = ["Waste Type", "Quantity & Photos", "Pickup Location", "Review"];
 
 const MOCK_DRIVERS = [
   { name: "Ravi Sharma", initials: "RS", vehicleNo: "MH-12-AB-4421", rating: "4.9", trips: "812" },
@@ -204,7 +204,6 @@ function RaiseRequestModal({ onClose, onSubmit }: { onClose: () => void; onSubmi
     !!form.wasteType,
     !!form.quantity,
     !!form.location,
-    !!form.vehicle,
     true,
   ][step];
 
@@ -363,41 +362,12 @@ function RaiseRequestModal({ onClose, onSubmit }: { onClose: () => void; onSubmi
           )}
 
           {step === 3 && (
-            <div className="space-y-3">
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Vehicle type</label>
-                <select value={form.vehicle} onChange={(e) => set("vehicle", e.target.value)}
-                  className="h-10 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none focus:border-ring">
-                  <option value="">Select a vehicle…</option>
-                  {VEHICLE_TYPES.map((v) => (
-                    <option key={v.name} value={v.name}>{v.name} — {v.cap} · {v.price} · ETA {v.eta}</option>
-                  ))}
-                </select>
-              </div>
-              {form.vehicle && (() => {
-                const v = VEHICLE_TYPES.find((x) => x.name === form.vehicle)!;
-                return (
-                  <div className="rounded-xl border border-primary bg-primary/5 p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium">{v.name}</div>
-                        <div className="text-xs text-muted-foreground">Capacity: {v.cap} · ETA: {v.eta}</div>
-                      </div>
-                      <div className="text-lg font-semibold text-primary">{v.price}</div>
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-          )}
-
-          {step === 4 && (
             <div className="space-y-3 text-sm">
               {[
                 ["Waste Type", form.wasteType],
                 ["Quantity", `${form.quantity} ${form.unit}`],
                 ["Location", form.location],
-                ["Vehicle", form.vehicle],
+                ["Vehicle", "Admin will assign vehicle"],
                 ["Photos", form.photos.length ? `${form.photos.length} file(s)` : "None"],
                 ["Notes", form.notes || "—"],
               ].map(([label, value]) => (

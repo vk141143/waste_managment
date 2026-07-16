@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   Activity, BarChart3, Bell, CheckCircle2, ClipboardList, FileText, Home, LifeBuoy,
-  MapPin, Package, Settings, ShieldCheck, Truck, Users, Wallet, XCircle, Search, IndianRupee,
+  MapPin, Package, Settings, ShieldCheck, Truck, Users, Wallet, XCircle, Search, IndianRupee, Send, X, Star,
 } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { DashboardShell, PageHeader, Panel, StatCard, StatusChip, type NavItem } from "@/components/dashboard-shell";
@@ -392,33 +392,169 @@ function DumpSitesView() {
   );
 }
 
+const ALL_TRANSPORTERS = [
+  { id: "T1", name: "Ravi Sharma",  reg: "MH-12-AB-4421", type: "Tipper",     cap: "8 t",  city: "Mumbai",    rating: 4.9, trips: 812, status: "Available" },
+  { id: "T2", name: "Priya Naidu",  reg: "TN-11-XY-9081", type: "Container",  cap: "10 t", city: "Chennai",   rating: 4.8, trips: 604, status: "Available" },
+  { id: "T3", name: "Suresh Kumar", reg: "DL-08-AB-1140", type: "Dumper",     cap: "6 t",  city: "Delhi",     rating: 4.7, trips: 390, status: "Busy" },
+  { id: "T4", name: "Karan Meena",  reg: "MH-04-JK-2214", type: "Mini Truck", cap: "3 t",  city: "Pune",      rating: 4.7, trips: 421, status: "Available" },
+  { id: "T5", name: "Ashwin Iyer",  reg: "KA-01-LM-4520", type: "Container",  cap: "12 t", city: "Bengaluru", rating: 4.6, trips: 302, status: "Available" },
+  { id: "T6", name: "Divya Rao",    reg: "TS-09-GH-7702", type: "Mini Truck", cap: "3 t",  city: "Hyderabad", rating: 4.5, trips: 218, status: "Busy" },
+];
+
+type Transporter = typeof ALL_TRANSPORTERS[0];
+
+function TransporterPickerModal({ onClose, onSelect }: { onClose: () => void; onSelect: (t: Transporter) => void }) {
+  const [search, setSearch] = useState("");
+  const [filterCity, setFilterCity] = useState("All");
+  const [filterType, setFilterType] = useState("All");
+  const [filterStatus, setFilterStatus] = useState("All");
+
+  const cities = ["All", ...Array.from(new Set(ALL_TRANSPORTERS.map((t) => t.city)))];
+  const types  = ["All", ...Array.from(new Set(ALL_TRANSPORTERS.map((t) => t.type)))];
+
+  const filtered = ALL_TRANSPORTERS.filter((t) =>
+    (t.name.toLowerCase().includes(search.toLowerCase()) || t.reg.toLowerCase().includes(search.toLowerCase())) &&
+    (filterCity   === "All" || t.city   === filterCity) &&
+    (filterType   === "All" || t.type   === filterType) &&
+    (filterStatus === "All" || t.status === filterStatus)
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div className="relative w-full max-w-2xl rounded-2xl bg-card shadow-[var(--shadow-elevated)]" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <div>
+            <h2 className="text-base font-semibold">Choose Transporter</h2>
+            <p className="text-xs text-muted-foreground">Select a verified transporter for this request</p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-muted"><X className="h-4 w-4" /></button>
+        </div>
+
+        <div className="flex flex-wrap gap-2 border-b border-border px-6 py-3">
+          <div className="relative min-w-[180px] flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name or vehicle no…"
+              className="h-8 w-full rounded-lg border border-border bg-muted/50 pl-8 pr-3 text-xs outline-none focus:border-ring" />
+          </div>
+          <select value={filterCity}   onChange={(e) => setFilterCity(e.target.value)}   className="h-8 rounded-lg border border-border bg-card px-2 text-xs outline-none">{cities.map((c) => <option key={c}>{c}</option>)}</select>
+          <select value={filterType}   onChange={(e) => setFilterType(e.target.value)}   className="h-8 rounded-lg border border-border bg-card px-2 text-xs outline-none">{types.map((t)  => <option key={t}>{t}</option>)}</select>
+          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="h-8 rounded-lg border border-border bg-card px-2 text-xs outline-none">{["All","Available","Busy"].map((s) => <option key={s}>{s}</option>)}</select>
+        </div>
+
+        <div className="max-h-[380px] overflow-y-auto px-6 py-3">
+          {filtered.length === 0 ? (
+            <div className="py-10 text-center text-sm text-muted-foreground">No transporters match your filters.</div>
+          ) : (
+            <div className="space-y-2">
+              {filtered.map((t) => (
+                <div key={t.id} className="flex items-center gap-4 rounded-xl border border-border p-3 hover:bg-muted/40">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-sm font-bold text-primary">
+                    {t.name.split(" ").map((n) => n[0]).join("")}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">{t.name}</span>
+                      <StatusChip tone={t.status === "Available" ? "success" : "warning"}>{t.status}</StatusChip>
+                    </div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">{t.reg} · {t.type} · {t.cap} · {t.city}</div>
+                    <div className="mt-0.5 flex items-center gap-1 text-xs">
+                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                      <span>{t.rating}</span>
+                      <span className="text-muted-foreground">· {t.trips} trips</span>
+                    </div>
+                  </div>
+                  <button onClick={() => onSelect(t)} disabled={t.status === "Busy"}
+                    className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-40">
+                    Assign
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type AdminRequest = { id: string; customer: string; driver: string; type: string; amount: string; stage: string; tone: "info" | "warning" | "success" | "destructive"; city: string; assignedVehicle: string };
+
 function RequestsView() {
+  const [reqs, setReqs] = useState<AdminRequest[]>([
+    { id: "REQ-2841", customer: "BuildWorks",  driver: "",         type: "Concrete", amount: "₹2,400", stage: "Pending",        tone: "warning",     city: "Mumbai",    assignedVehicle: "" },
+    { id: "REQ-2842", customer: "TataCon",     driver: "P. Naidu", type: "Bricks",   amount: "₹3,040", stage: "En Route",       tone: "info",        city: "Chennai",   assignedVehicle: "TN-11-XY-9081" },
+    { id: "REQ-2843", customer: "Godrej Sites",driver: "K. Meena", type: "Mixed",    amount: "₹4,600", stage: "Heading to Dump",tone: "info",        city: "Pune",      assignedVehicle: "MH-04-JK-2214" },
+    { id: "REQ-2844", customer: "L&T",         driver: "S. Iyer",  type: "Metal",    amount: "₹3,520", stage: "Completed",      tone: "success",     city: "Bengaluru", assignedVehicle: "DL-08-AB-1140" },
+    { id: "REQ-2845", customer: "Prestige",    driver: "",         type: "Concrete", amount: "₹2,720", stage: "Pending",        tone: "warning",     city: "Hyderabad", assignedVehicle: "" },
+    { id: "REQ-2846", customer: "Shapoorji",   driver: "",         type: "Wood",     amount: "₹1,800", stage: "Pending",        tone: "warning",     city: "Mumbai",    assignedVehicle: "" },
+  ]);
+  const [pickerForId, setPickerForId] = useState<string | null>(null);
+
+  function handleAssign(t: Transporter) {
+    if (!pickerForId) return;
+    setReqs((prev) => prev.map((r) => r.id === pickerForId ? { ...r, driver: t.name, assignedVehicle: t.reg } : r));
+    setPickerForId(null);
+  }
+
+  function sendToTransporter(id: string) {
+    setReqs((prev) => prev.map((r) => r.id === id ? { ...r, stage: "Sent to Transporter", tone: "info" } : r));
+  }
+
   return (
     <>
-      <PageHeader title="Requests" description="All pickup requests across the platform." />
+      {pickerForId && <TransporterPickerModal onClose={() => setPickerForId(null)} onSelect={handleAssign} />}
+      <PageHeader title="Requests" description="Approve requests and assign transporters." />
       <div className="mb-6 grid gap-4 sm:grid-cols-4">
         <StatCard label="Today" value="486" icon={ClipboardList} tone="primary" />
-        <StatCard label="In Progress" value="142" icon={Activity} tone="accent" />
-        <StatCard label="Completed" value="9,214" icon={CheckCircle2} tone="secondary" />
-        <StatCard label="Cancelled" value="42" icon={XCircle} tone="destructive" />
+        <StatCard label="Pending" value={String(reqs.filter(r => r.stage === "Pending").length)} icon={Activity} tone="warning" />
+        <StatCard label="In Progress" value={String(reqs.filter(r => ["En Route","Heading to Dump","Sent to Transporter"].includes(r.stage)).length)} icon={Truck} tone="accent" />
+        <StatCard label="Completed" value={String(reqs.filter(r => r.stage === "Completed").length)} icon={CheckCircle2} tone="secondary" />
       </div>
       <Panel>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <th className="pb-3">ID</th><th className="pb-3">Customer</th><th className="pb-3">Driver</th><th className="pb-3">Type</th><th className="pb-3">Amount</th><th className="pb-3">Status</th>
+                <th className="pb-3">ID</th>
+                <th className="pb-3">Customer</th>
+                <th className="pb-3">Type</th>
+                <th className="pb-3">City</th>
+                <th className="pb-3">Transporter</th>
+                <th className="pb-3">Status</th>
+                <th className="pb-3 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {liveTrips.concat(liveTrips).map((t, i) => (
-                <tr key={i} className="hover:bg-muted/40">
-                  <td className="py-3 font-mono text-xs">{t.id}</td>
-                  <td className="py-3 font-medium">{t.customer}</td>
-                  <td className="py-3 text-muted-foreground">{t.driver}</td>
-                  <td className="py-3 text-muted-foreground">Concrete</td>
-                  <td className="py-3">₹{(2400 + i * 320).toLocaleString()}</td>
-                  <td className="py-3"><StatusChip tone={t.tone}>{t.stage}</StatusChip></td>
+              {reqs.map((r) => (
+                <tr key={r.id} className="hover:bg-muted/40">
+                  <td className="py-3 font-mono text-xs">{r.id}</td>
+                  <td className="py-3 font-medium">{r.customer}</td>
+                  <td className="py-3 text-muted-foreground">{r.type}</td>
+                  <td className="py-3 text-muted-foreground">{r.city}</td>
+                  <td className="py-3">
+                    {r.stage === "Pending" ? (
+                      <button onClick={() => setPickerForId(r.id)}
+                        className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition hover:bg-muted ${
+                          r.assignedVehicle ? "border-success/40 bg-success/10 text-success" : "border-border"
+                        }`}>
+                        <Truck className="h-3 w-3" />
+                        {r.assignedVehicle ? `${r.driver} · ${r.assignedVehicle}` : "Choose Transporter"}
+                      </button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">{r.driver || "—"}</span>
+                    )}
+                  </td>
+                  <td className="py-3"><StatusChip tone={r.tone}>{r.stage}</StatusChip></td>
+                  <td className="py-3 text-right">
+                    {r.stage === "Pending" ? (
+                      <button onClick={() => r.assignedVehicle && sendToTransporter(r.id)} disabled={!r.assignedVehicle}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-40">
+                        <Send className="h-3 w-3" /> Send
+                      </button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

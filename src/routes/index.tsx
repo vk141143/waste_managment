@@ -11,7 +11,7 @@ const roles = [
     id: "customer",
     to: "/login" as const,
     role: "customer",
-    name: "Customer",
+    name: "Public User",
     tagline: "Builders, contractors & industries",
     desc: "Raise pickup requests, track drivers live and manage invoices.",
     icon: Building2,
@@ -21,7 +21,7 @@ const roles = [
     id: "driver",
     to: "/login" as const,
     role: "driver",
-    name: "Driver",
+    name: "Transporter",
     tagline: "Verified transport partners",
     desc: "Accept nearby jobs, navigate pickups and log earnings.",
     icon: Truck,
@@ -31,9 +31,9 @@ const roles = [
     id: "admin",
     to: "/login" as const,
     role: "admin",
-    name: "Admin",
+    name: "Municipal Head",
     tagline: "Operations & fleet control",
-    desc: "Approve drivers, monitor live trips and generate reports.",
+    desc: "Approve transporters, monitor live trips and generate reports.",
     icon: HardHat,
     accent: "bg-secondary/30 text-foreground",
   },
@@ -72,7 +72,7 @@ function Landing() {
             <span className="h-1.5 w-1.5 rounded-full bg-success" /> Enterprise · Live preview
           </span>
           <h1 className="mt-6 text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
-            Construction & demolition waste, <span className="text-primary">handled cleanly.</span>
+            Online C&D waste Management application <span className="text-primary">handled cleanly.</span>
           </h1>
           <p className="mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">
             A modern operations platform connecting sites with verified transport drivers. Explore the dashboards below — every role has its own focused workspace.

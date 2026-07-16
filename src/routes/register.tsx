@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Building2, HardHat, ShieldCheck, Truck, Eye, EyeOff } from "lucide-react";
+import { Building2, HardHat, ShieldCheck, Truck, Eye, EyeOff, LocateFixed } from "lucide-react";
 
 type Role = "customer" | "driver" | "admin" | "super-admin";
 
@@ -24,13 +24,29 @@ function RegisterPage() {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
+  const [lat, setLat] = useState("");
+  const [lng, setLng] = useState("");
+  const [locating, setLocating] = useState(false);
+  const [locError, setLocError] = useState("");
   const [error, setError] = useState("");
+
+  function useCurrentLocation() {
+    if (!navigator.geolocation) { setLocError("Geolocation not supported by your browser."); return; }
+    setLocating(true);
+    setLocError("");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { setLat(pos.coords.latitude.toFixed(6)); setLng(pos.coords.longitude.toFixed(6)); setLocating(false); },
+      () => { setLocError("Unable to retrieve location. Please allow access."); setLocating(false); }
+    );
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name || !email || !password) { setError("Please fill in all fields."); return; }
+    if (role === "customer" && !mobile) { setError("Please enter your mobile number."); return; }
     if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
     // After registration go straight to dashboard
     navigate({ to: cfg.dashboard as any });
@@ -65,6 +81,19 @@ function RegisterPage() {
             />
           </label>
 
+          {role === "customer" && (
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Mobile number</span>
+              <input
+                type="tel"
+                value={mobile}
+                onChange={(e) => setMobile(e.target.value)}
+                placeholder="+91 98765 43210"
+                className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none focus:border-ring"
+              />
+            </label>
+          )}
+
           <label className="block">
             <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Email</span>
             <input
@@ -75,6 +104,44 @@ function RegisterPage() {
               className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none focus:border-ring"
             />
           </label>
+
+          {role === "customer" && (
+            <div className="space-y-2">
+              <span className="block text-xs font-medium text-muted-foreground">Location</span>
+              <button
+                type="button"
+                onClick={useCurrentLocation}
+                disabled={locating}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card py-2.5 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-60"
+              >
+                <LocateFixed className="h-4 w-4 text-primary" />
+                {locating ? "Detecting…" : "Use current location"}
+              </button>
+              {locError && <p className="text-xs text-destructive">{locError}</p>}
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="mb-1 block text-xs text-muted-foreground">Latitude</span>
+                  <input
+                    type="text"
+                    value={lat}
+                    onChange={(e) => setLat(e.target.value)}
+                    placeholder="e.g. 12.971599"
+                    className="h-10 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none focus:border-ring"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs text-muted-foreground">Longitude</span>
+                  <input
+                    type="text"
+                    value={lng}
+                    onChange={(e) => setLng(e.target.value)}
+                    placeholder="e.g. 77.594566"
+                    className="h-10 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none focus:border-ring"
+                  />
+                </label>
+              </div>
+            </div>
+          )}
 
           <label className="block">
             <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Password</span>
